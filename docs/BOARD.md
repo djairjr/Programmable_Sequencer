@@ -99,11 +99,12 @@ Sources: **[W]** Waveshare wiki https://www.waveshare.com/wiki/ESP32-S3-ETH-8DI-
 
 ## 10. To measure on the bench
 
-None of this has been verified yet.
+Status 2026-10-26: firmware 1.3.1 runs on this board and the maintainer reported it fully functional. The numbered
+measurements below have **not** been taken (no numbers recorded), and per-channel confirmation of the relays was not recorded.
 
 1. TCA9554 outputs and relays during an ESP32 reset (`ESP.restart()`, panic, the RESET button).
 2. Worst lateness of the sequencer task (`seq_max_late_us`) with: no saved network, an unreachable MQTT broker,
    a phone on the AP, and a settings write.
 3. Time for the AP to appear with no network (target: 10 s or less) and whether a phone can join and open the page.
 4. Brownout/stability with WiFi and Ethernet both active on the supplies used in the field (7-36 V and USB-C).
-5. Physical proof of the relays CH1-CH8: counts only once the owner confirms having seen or heard them.
+5. Physical proof of the relays CH1-CH8: counts only once the owner confirms having seen or heard them (reported functional with 1.3.1; per channel not recorded).

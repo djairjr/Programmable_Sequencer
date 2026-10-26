@@ -14,6 +14,11 @@ All notable changes to this project are documented here. The format follows
   The parser is now `cookieValue()` in `Cookie.h`, which uses the real name length, and a host test
   (`tests/host/test_cookie.cpp`, run by CI) covers it. **1.2.0 and 1.3.0 cannot log in; update to 1.3.1.**
 
+### Verified
+
+- Written as a full image to the target board (Waveshare ESP32-S3-ETH-8DI-8RO-C) and reported fully functional by the
+  maintainer on 2026-10-26. The measurements in `docs/BOARD.md` section 10 have not been taken.
+
 ## [1.3.0] - 2026-10-26
 
 ### Changed

@@ -13,4 +13,4 @@ How to write them to a unit: [../docs/UPDATING.md](../docs/UPDATING.md).
 
 | version | notes |
 | --- | --- |
-| [1.3.1](1.3.1/) | Fixes the login loop. Latest. Not yet run on a board. |
+| [1.3.1](1.3.1/) | Fixes the login loop. Latest. Tested on a board. |
