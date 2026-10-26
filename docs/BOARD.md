@@ -28,7 +28,7 @@ Sources: **[W]** Waveshare wiki https://www.waveshare.com/wiki/ESP32-S3-ETH-8DI-
 | --- | --- | --- |
 | Relays CH1-CH8 | TCA9554PWR EXIO1-EXIO8, I2C address 0x20 | not direct GPIOs |
 | I2C (TCA9554 + RTC) | SDA = GPIO42, SCL = GPIO41 | bus shared with the PCF85063 RTC |
-| Digital inputs DI1-DI8 | GPIO4-GPIO11 | isolated; the demo inverts the logic (`DIN_Inverse_Enable`); **unused** by this firmware |
+| Digital inputs DI1-DI8 | GPIO4-GPIO11 | isolated; the demo inverts the logic (`DIN_Inverse_Enable`); **unused** by this firmware (a future use is START/STOP/PAUSE/RESET buttons) |
 | Ethernet W5500 (SPI) | INT = 12, MOSI = 13, MISO = 14, SCLK = 15, CS = 16, RST = 39, PHY address = 1 | `ETH.begin(ETH_PHY_W5500, ..., SPI)` |
 | CAN / RS485 (UART1) | TX = GPIO17, RX = GPIO18 | isolated; unused |
 | RGB LED WS2812 | GPIO38 | |
@@ -99,12 +99,26 @@ Sources: **[W]** Waveshare wiki https://www.waveshare.com/wiki/ESP32-S3-ETH-8DI-
 
 ## 10. To measure on the bench
 
-Status 2026-10-26: firmware 1.3.1 runs on this board and the maintainer reported it fully functional. The numbered
-measurements below have **not** been taken (no numbers recorded), and per-channel confirmation of the relays was not recorded.
+Status 2026-10-26: firmware 1.3.1 runs on this board and the maintainer reported it fully functional. None of the
+checks below has been taken yet (no numbers recorded), and per-channel confirmation of the relays was not recorded.
 
-1. TCA9554 outputs and relays during an ESP32 reset (`ESP.restart()`, panic, the RESET button).
-2. Worst lateness of the sequencer task (`seq_max_late_us`) with: no saved network, an unreachable MQTT broker,
-   a phone on the AP, and a settings write.
-3. Time for the AP to appear with no network (target: 10 s or less) and whether a phone can join and open the page.
-4. Brownout/stability with WiFi and Ethernet both active on the supplies used in the field (7-36 V and USB-C).
-5. Physical proof of the relays CH1-CH8: counts only once the owner confirms having seen or heard them (reported functional with 1.3.1; per channel not recorded).
+The system is made for entertainment. What a player perceives is the contrast between the relays being driven and
+the end of the sequence (the cycle pause is always longer than the gap between steps, which the settings
+validation enforces); a few milliseconds of jitter are not perceptible. The normal way to use the unit is to
+configure it through its own access point, with no network, no broker and no Home Assistant, which is the lightest
+load the firmware can have.
+
+Checks that matter for that use:
+
+1. Leave the unit running the sequence for several hours and read `seq_max_late_us` in `/api/state`. Anything within
+   tens of milliseconds is far below what can be noticed.
+2. Time for the AP to appear after power-up with no network (target: 10 s or less), and that a phone can join it and
+   open the page.
+3. What the loads do while the ESP32 resets (`ESP.restart()`, panic, the RESET button); Waveshare does not document it.
+4. Physical proof of the relays CH1-CH8; it counts only once the owner confirms having seen or heard them
+   (reported functional with 1.3.1; per channel not recorded).
+
+Only if a unit is used with Ethernet, WiFi or Home Assistant:
+
+5. `seq_max_late_us` with an unreachable MQTT broker, a saved WiFi network that is absent, and a settings write.
+6. Brownout and stability with WiFi and Ethernet both active on the supplies used in the field (7-36 V and USB-C).

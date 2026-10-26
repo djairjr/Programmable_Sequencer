@@ -77,9 +77,10 @@ Serial console (115200): `start`, `stop`, `status`.
 ## Status
 
 - Compiles from a clean clone (CI builds every push). **Tested on a board** (Waveshare ESP32-S3-ETH-8DI-8RO-C) with
-  1.3.1: reported fully functional by the maintainer on 2026-10-26. The timing and network-stress measurements in
+  1.3.1: reported fully functional by the maintainer on 2026-10-26. The bench checks in
   [docs/BOARD.md](docs/BOARD.md#10-to-measure-on-the-bench) have not been taken.
 - Open: over-the-air update; relay behaviour during an ESP32 reset (not documented by Waveshare).
+- Future, not scheduled: use the board's digital inputs (DI1-DI8) as START, STOP, PAUSE and RESET buttons.
 - The default passwords (`sequencer1234!`) are defined in `Config.h` and are public: change the page password and set
   `ap.pass` on every deployed unit. The page password is changed from the page; the AP password through `ap.pass` in `network.json` (or `POST /api/network`).
 - Licensed under the [MIT License](LICENSE). The third-party libraries have their own licenses: see
