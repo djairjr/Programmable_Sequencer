@@ -62,7 +62,7 @@ private:
   // ── Sessions ──
   String cookieToken() {
     String c = server_.header("Cookie");
-    int i = c.indexOf("qs_sess=");
+    int i = c.indexOf("seq_sess=");
     if (i < 0) return "";
     int e = c.indexOf(';', i);
     return c.substring(i + 8, e < 0 ? c.length() : e);
@@ -112,7 +112,7 @@ private:
 
   void handleLogin() {
     if (checkPass(ctx_.store.net, server_.arg("pass"))) {
-      server_.sendHeader("Set-Cookie", "qs_sess=" + newSession() + "; Path=/; HttpOnly; SameSite=Strict");
+      server_.sendHeader("Set-Cookie", "seq_sess=" + newSession() + "; Path=/; HttpOnly; SameSite=Strict");
       server_.sendHeader("Location", "/");
       server_.send(303);
       Serial.println("[WEB] login ok");
@@ -126,7 +126,7 @@ private:
   void handleLogout() {
     String t = cookieToken();
     for (auto& s : sessions_) if (s == t) s = "";
-    server_.sendHeader("Set-Cookie", "qs_sess=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict");
+    server_.sendHeader("Set-Cookie", "seq_sess=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict");
     server_.sendHeader("Location", "/");
     server_.send(303);
   }

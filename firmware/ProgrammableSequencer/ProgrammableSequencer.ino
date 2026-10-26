@@ -73,7 +73,7 @@ void bootButton() {
 void setup() {
   Serial.begin(115200);
   delay(300);
-  Serial.printf("\n[BOOT] Quadros Sequenciais %s\n", FW_VERSION);
+  Serial.printf("\n[BOOT] Programmable Sequencer %s\n", FW_VERSION);
   Serial.printf("[BOOT] reset reason: %s\n", resetReasonName());
 
   pinMode(PIN_BOOT, INPUT_PULLUP);

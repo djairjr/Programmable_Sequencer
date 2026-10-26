@@ -41,7 +41,7 @@ Sources: **[W]** Waveshare wiki https://www.waveshare.com/wiki/ESP32-S3-ETH-8DI-
 - The firmware writes the TCA9554 output register (reg 0x01) and sets the direction register (reg 0x03 = 0x00,
   all outputs). Bit 0 = CH1 ... bit 7 = CH8; high level = relay on [F].
 - At boot the output register is zeroed **before** the pins become outputs, so no relay pulses [F].
-- Spotlights are wired to the **NO** contact: dark with the board unpowered or in reset (installation rule).
+- Loads are wired to the **NO** contact: off with the board unpowered or in reset (installation rule).
 - The wiki's safety section says to confirm or reset the relay state after power-up [W]; the firmware does so by
   switching every relay off at boot.
 

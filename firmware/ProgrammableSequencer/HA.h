@@ -154,7 +154,7 @@ void begin(AppCtx& app) {
   uint8_t mac[6];
   esp_read_mac(mac, ESP_MAC_WIFI_STA);
   device.setUniqueId(mac, sizeof(mac));
-  device.setName("Quadros Sequenciais");
+  device.setName("Programmable Sequencer");
   device.setManufacturer("Nicolau dos Brinquedos");
   device.setModel("Waveshare ESP32-S3-ETH-8DI-8RO-C");
   device.setSoftwareVersion(FW_VERSION);

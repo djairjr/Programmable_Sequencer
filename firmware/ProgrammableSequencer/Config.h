@@ -11,7 +11,7 @@
 #include <esp_random.h>
 #include "Pins.h"
 
-static const char* FW_VERSION         = "1.1.0";
+static const char* FW_VERSION         = "1.2.0";
 static const char* DEFAULT_ADMIN_PASS = "sequencer1234!";
 static const char* DEFAULT_AP_PASS     = "sequencer1234!";   // used when network.json has no ap.pass
 
@@ -48,8 +48,8 @@ struct SeqConfig {
   RepeatMode repeat = RepeatMode::LOOP;
   uint32_t   repeat_count = 3;
   bool       autostart = true;
-  String     channel_names[NUM_CHANNELS] = {"Quadro 1", "Quadro 2", "Quadro 3", "Quadro 4",
-                                            "Quadro 5", "Quadro 6", "Quadro 7", "Quadro 8"};
+  String     channel_names[NUM_CHANNELS] = {"Canal 1", "Canal 2", "Canal 3", "Canal 4",
+                                            "Canal 5", "Canal 6", "Canal 7", "Canal 8"};
 };
 
 // Returns nullptr if valid, or the reason it was refused (shown on the page, in Portuguese).
@@ -156,7 +156,7 @@ struct IfaceConfig {
 };
 
 struct NetConfig {
-  String hostname = "quadros";
+  String hostname = "sequencer";
   String admin_pass_hash;            // empty = default password
   String ap_pass;                    // configuration-AP WiFi password; empty = DEFAULT_AP_PASS
   IfaceConfig eth;

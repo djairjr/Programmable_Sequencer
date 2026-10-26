@@ -4,7 +4,7 @@
 
 #include <Arduino.h>
 
-#define QS_STYLE R"CSS(
+#define SEQ_STYLE R"CSS(
 :root{--bg:#f4f4f2;--card:#fff;--fg:#1b1b1b;--muted:#666;--line:#dcdcd8;--accent:#1f6feb;--accent-fg:#fff;
 --ok:#1a7f37;--warn:#b35900;--err:#c62828;--chip:#eef2f8;--on:#f5b301}
 @media (prefers-color-scheme:dark){:root{--bg:#141414;--card:#1e1e1e;--fg:#ececec;--muted:#a0a0a0;--line:#333;
@@ -50,11 +50,11 @@ details summary{cursor:pointer;color:var(--muted)}
 
 static const char LOGIN_HTML[] PROGMEM = R"HTML(<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Quadros Sequenciais</title><style>)HTML" QS_STYLE R"HTML(
+<title>Programmable Sequencer</title><style>)HTML" SEQ_STYLE R"HTML(
 .login{max-width:360px;margin:40px auto;text-align:center}.login .logo{display:inline-flex;margin-bottom:12px}
 .login .logo img{height:120px}</style></head><body>
 <div class="login card"><div class="logo"><img src="/logo.svg" alt="Nicolau dos Brinquedos"></div>
-<h1>Quadros Sequenciais</h1>
+<h1>Programmable Sequencer</h1>
 <form method="post" action="/login" style="text-align:left">
 <label for="p">Senha</label><input id="p" type="password" name="pass" autocomplete="current-password" autofocus required>
 <div id="e" class="msg err hide">Senha incorreta.</div>
@@ -64,9 +64,9 @@ static const char LOGIN_HTML[] PROGMEM = R"HTML(<!doctype html>
 
 static const char INDEX_HTML[] PROGMEM = R"HTML(<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Quadros Sequenciais</title><style>)HTML" QS_STYLE R"HTML(</style></head><body>
+<title>Programmable Sequencer</title><style>)HTML" SEQ_STYLE R"HTML(</style></head><body>
 <header><div class="logo"><img src="/logo.svg" alt="Nicolau dos Brinquedos"></div>
-<h1>Quadros Sequenciais</h1><span id="pill" class="pill">…</span></header>
+<h1>Programmable Sequencer</h1><span id="pill" class="pill">…</span></header>
 <main>
 <div class="tabs"><button id="tSeq" class="act" onclick="tab('seq')">Sequência</button>
 <button id="tNet" onclick="tab('net')">Rede</button></div>
@@ -82,7 +82,7 @@ static const char INDEX_HTML[] PROGMEM = R"HTML(<!doctype html>
 
 <div class="card">
 <h2>Sequência</h2>
-<div class="muted">Toque num quadro para acrescentar um passo. Repetições são permitidas.</div>
+<div class="muted">Toque num canal para acrescentar um passo. Repetições são permitidas.</div>
 <div class="chans" id="chans" style="margin-top:10px"></div>
 <div class="seq" id="seq"></div>
 <div class="row"><button onclick="back()">⌫ Apagar último</button><button onclick="clr()">Limpar</button>
@@ -111,7 +111,7 @@ static const char INDEX_HTML[] PROGMEM = R"HTML(<!doctype html>
 <label class="inl"><input type="radio" name="rep" value="LOOP" onchange="repUi();dirty()"> Sempre</label>
 <div id="cntBox" style="max-width:160px"><label for="rc">Número de ciclos</label><input id="rc" type="number" min="1" step="1" oninput="dirty()"></div>
 <label class="inl" style="margin-top:12px"><input type="checkbox" id="auto" onchange="dirty()"> Começar sozinho ao ligar a placa</label>
-<details style="margin-top:12px"><summary>Nomes dos quadros</summary><div class="grid2" id="names"></div></details>
+<details style="margin-top:12px"><summary>Nomes dos canais</summary><div class="grid2" id="names"></div></details>
 </div>
 
 <div class="card"><div class="row"><button class="primary" onclick="save()">Salvar</button>
@@ -119,7 +119,7 @@ static const char INDEX_HTML[] PROGMEM = R"HTML(<!doctype html>
 <div class="muted" style="margin-top:6px">Salvar para a sequência em andamento. Depois, use Iniciar.</div></div>
 
 <div class="card"><h2>Teste manual</h2>
-<div class="muted">Liga e desliga cada quadro. Só funciona com a sequência parada.</div>
+<div class="muted">Liga e desliga cada canal. Só funciona com a sequência parada.</div>
 <div class="chans" id="manual" style="margin-top:10px"></div></div>
 </section>
 
@@ -180,7 +180,7 @@ let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.error||('Erro
 function msg(id,ok,t){const e=$(id);e.textContent=t;e.className='msg '+(ok?'ok':'err')}
 const s2ms=v=>Math.round(parseFloat(String(v).replace(',','.'))*1000);
 const ms2s=v=>(v/1000).toString();
-function name(i){return cfg&&cfg.channel_names[i-1]||('Quadro '+i)}
+function name(i){return cfg&&cfg.channel_names[i-1]||('Canal '+i)}
 function buildChans(){let h='',m='';for(let i=1;i<=8;i++){h+=`<button onclick="add(${i})"><b>CH${i}</b><small>${esc(name(i))}</small></button>`;
 m+=`<button id="m${i}" onclick="man(${i})"><b>CH${i}</b><small>${esc(name(i))}</small></button>`}$('chans').innerHTML=h;$('manual').innerHTML=m}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
@@ -195,7 +195,7 @@ $('seqTxt').style.borderColor=ok?'':'var(--err)';if(ok){seq=t.map(Number);dirty(
 function radio(n){const e=document.querySelector(`input[name=${n}]:checked`);return e?e.value:null}
 function setRadio(n,v){const e=document.querySelector(`input[name=${n}][value="${v}"]`);if(e)e.checked=true}
 function modeUi(){const p=radio('mode')=='PULSO';$('gapBox').classList.toggle('hide',!p);$('blinkBox').classList.toggle('hide',p);
-$('modeHelp').textContent=p?'Pulso: há um tempo desligado entre os quadros.':'Troca: o próximo quadro acende quando o anterior apaga. Um quadro repetido em seguida dá uma apagada curta.'}
+$('modeHelp').textContent=p?'Pulso: há um tempo desligado entre os canais.':'Troca: o próximo canal liga quando o anterior desliga. Um canal repetido em seguida dá uma apagada curta.'}
 function repUi(){$('cntBox').classList.toggle('hide',radio('rep')!='N_TIMES')}
 function dirty(){isDirty=true;$('dirtyMsg').textContent='Alterações não salvas';$('saveMsg').classList.add('hide')}
 function fill(){seq=cfg.sequence.slice();setRadio('mode',cfg.mode);setRadio('rep',cfg.repeat);

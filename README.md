@@ -1,7 +1,7 @@
 # Programmable Sequencer
 
-Programmable relay sequencer for escape rooms on the Waveshare ESP32-S3-ETH-8DI-8RO-C. It lights up to eight
-spotlights (CH1-CH8) in an order the Gamemaster programs from a web page or from Home Assistant, and that
+Programmable relay sequencer for escape rooms on the Waveshare ESP32-S3-ETH-8DI-8RO-C. It switches up to eight
+relay channels (CH1-CH8) in an order the Gamemaster programs from a web page or from Home Assistant, and that
 order is the clue the player watches. Not a game: there is no player input and no win condition.
 
 ## The one rule

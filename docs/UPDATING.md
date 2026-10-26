@@ -45,7 +45,7 @@ For an app-only update use `0x10000` and the `-app.bin` file.
 ## 4. Check it worked
 
 1. With no network the unit raises the WiFi `Sequencer-XXXX` within about 10 s (default password `sequencer1234!`) and the
-   page opens at `http://192.168.4.1`. If it is on your network, use its IP or `http://quadros.local`.
+   page opens at `http://192.168.4.1`. If it is on your network, use its IP or `http://sequencer.local`.
 2. Log in and open `/api/state`: `"version"` must read the version you wrote.
 3. After a `full` install, set the sequence and the network again. With autostart on, the sequence starts by itself.
 

@@ -1,6 +1,6 @@
 # Programmable Sequencer — Architecture
 
-Programmable relay sequencer: turns on the panel lights (CH1-CH8) in the order the Gamemaster (GM)
+Programmable relay sequencer: switches the relay channels (CH1-CH8) in the order the Gamemaster (GM)
 programmed. The order is the clue the player observes. The functional summary is in the
 [README](../README.md); this document describes how the firmware implements it, starting with the FSM.
 
@@ -106,7 +106,7 @@ Defaults live in the code; the JSON is only an override (`/config.json` and `/ne
 
 ```json
 {
-  "hostname": "quadros",
+  "hostname": "sequencer",
   "admin_pass_hash": "",
   "ap":   { "pass": "" },
   "eth":  { "enabled": true, "dhcp": true, "ip": "", "gateway": "", "netmask": "", "dns": "" },
@@ -164,7 +164,7 @@ AP active, the sequence runs the same. The task's worst-case delay appears in `s
 
 ## 5. Page access
 
-- Login via `POST /login` (form) and session cookie `qs_sess`, `HttpOnly` and `SameSite=Strict`.
+- Login via `POST /login` (form) and session cookie `seq_sess`, `HttpOnly` and `SameSite=Strict`.
   The password is never sent in the URL.
 - Public: only the login screen and `/logo.svg`. All `/api/*` routes require a session.
 - Default password `sequencer1234!`. When changed through the page, it stores

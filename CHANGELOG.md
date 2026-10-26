@@ -4,11 +4,21 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-10-26
+
+### Changed
+
+- The product identity is now **Sequencer** everywhere: default hostname `sequencer` (mDNS
+  `sequencer.local`), Home Assistant device name, boot banner, page title and the default channel names
+  (`Canal 1` ... `Canal 8`). The firmware only sequences relay channels; what is wired to them is up to the
+  installation. Values already saved in `/config.json` and `/network.json` are kept.
+- Internal names follow: session cookie `seq_sess` (everyone logs in again after the update).
+
 ## [1.1.0] - 2026-10-26
 
 ### Changed
 
-- **Defaults changed.** The AP SSID is now `Sequencer-XXXX` (was `Quadros-XXXX`) and the default page and AP
+- **Defaults changed.** The AP SSID is now `Sequencer-XXXX` and the default page and AP
   password is `sequencer1234!`. A unit that never set its own page password (empty hash in `/network.json`)
   accepts the new default after an `app` update; a unit that set one keeps it.
 - The AP password is now configurable: `ap.pass` in `/network.json` (8-63 characters; empty = default).
@@ -41,4 +51,5 @@ All notable changes to this project are documented here. The format follows
   Ethernet + WiFi + configuration AP with captive portal, Home Assistant over MQTT Discovery, BOOT-button
   password recovery. FSM, web server, AP and MQTT shared one `loop()`.
 
+[1.2.0]: https://github.com/djairjr/Programmable_Sequencer/releases/tag/v1.2.0
 [1.1.0]: https://github.com/djairjr/Programmable_Sequencer/releases/tag/v1.1.0
