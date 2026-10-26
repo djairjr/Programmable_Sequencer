@@ -9,7 +9,7 @@ order is the clue the player watches. Not a game: there is no player input and n
 ## Download
 
 Compiled firmware is in [`releases/`](releases/) (one folder per version) and is attached to each
-[GitHub Release](https://github.com/djairjr/Programmable_Sequencer/releases/latest). Latest: [`releases/1.3.0`](releases/1.3.0).
+[GitHub Release](https://github.com/djairjr/Programmable_Sequencer/releases/latest). Latest: [`releases/1.3.1`](releases/1.3.1).
 How to write it to a unit: [docs/UPDATING.md](docs/UPDATING.md).
 
 ## The one rule

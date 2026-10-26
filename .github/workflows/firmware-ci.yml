@@ -20,6 +20,11 @@ jobs:
           echo "VERSION=$file FW_VERSION=$fw"
           test "$fw" = "$file"
 
+      - name: Host tests
+        run: |
+          g++ -std=c++17 -Wall -Werror -Itests/host tests/host/test_cookie.cpp -o /tmp/test_cookie
+          /tmp/test_cookie
+
       - name: Install arduino-cli
         run: |
           mkdir -p "$HOME/.local/bin"

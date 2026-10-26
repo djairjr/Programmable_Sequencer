@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.3.1] - 2026-10-26
+
+### Fixed
+
+- **Login loop.** After typing the correct password the sign-in page came back, so the page could not be
+  used. The session cookie had been renamed (`qs_sess` to `seq_sess`) in 1.2.0 but the parser still skipped a
+  fixed number of characters, so the token was read one character too long and every session was refused.
+  The parser is now `cookieValue()` in `Cookie.h`, which uses the real name length, and a host test
+  (`tests/host/test_cookie.cpp`, run by CI) covers it. **1.2.0 and 1.3.0 cannot log in; update to 1.3.1.**
+
 ## [1.3.0] - 2026-10-26
 
 ### Changed
@@ -62,4 +72,5 @@ All notable changes to this project are documented here. The format follows
   Ethernet + WiFi + configuration AP with captive portal, Home Assistant over MQTT Discovery, BOOT-button
   password recovery. FSM, web server, AP and MQTT shared one `loop()`.
 
+[1.3.1]: https://github.com/djairjr/Programmable_Sequencer/releases/tag/v1.3.1
 [1.3.0]: https://github.com/djairjr/Programmable_Sequencer/releases/tag/v1.3.0

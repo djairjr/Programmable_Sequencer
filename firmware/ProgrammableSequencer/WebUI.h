@@ -3,6 +3,7 @@
 
 #include <WebServer.h>
 #include "Config.h"
+#include "Cookie.h"
 #include "SeqRunner.h"
 #include "Net.h"
 #include "web_index.h"
@@ -55,18 +56,13 @@ private:
   AppCtx& ctx_;
   WebServer server_;
   static constexpr int MAX_SESSIONS = 8;
+  static constexpr const char* SESSION_COOKIE = "seq_sess";
   String sessions_[MAX_SESSIONS];
   int nextSession_ = 0;
   uint32_t restartAt_ = 0;
 
   // ── Sessions ──
-  String cookieToken() {
-    String c = server_.header("Cookie");
-    int i = c.indexOf("seq_sess=");
-    if (i < 0) return "";
-    int e = c.indexOf(';', i);
-    return c.substring(i + 8, e < 0 ? c.length() : e);
-  }
+  String cookieToken() { return cookieValue(server_.header("Cookie"), SESSION_COOKIE); }
   bool hasSession() {
     String t = cookieToken();
     if (t.length() != 32) return false;
@@ -112,7 +108,7 @@ private:
 
   void handleLogin() {
     if (checkPass(ctx_.store.net, server_.arg("pass"))) {
-      server_.sendHeader("Set-Cookie", "seq_sess=" + newSession() + "; Path=/; HttpOnly; SameSite=Strict");
+      server_.sendHeader("Set-Cookie", String(SESSION_COOKIE) + "=" + newSession() + "; Path=/; HttpOnly; SameSite=Strict");
       server_.sendHeader("Location", "/");
       server_.send(303);
       Serial.println("[WEB] login ok");
@@ -126,7 +122,7 @@ private:
   void handleLogout() {
     String t = cookieToken();
     for (auto& s : sessions_) if (s == t) s = "";
-    server_.sendHeader("Set-Cookie", "seq_sess=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict");
+    server_.sendHeader("Set-Cookie", String(SESSION_COOKIE) + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict");
     server_.sendHeader("Location", "/");
     server_.send(303);
   }

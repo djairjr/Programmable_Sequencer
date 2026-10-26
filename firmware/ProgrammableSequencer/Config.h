@@ -11,7 +11,7 @@
 #include <esp_random.h>
 #include "Pins.h"
 
-static const char* FW_VERSION         = "1.3.0";
+static const char* FW_VERSION         = "1.3.1";
 static const char* DEFAULT_ADMIN_PASS = "sequencer1234!";
 static const char* DEFAULT_AP_PASS     = "sequencer1234!";   // used when network.json has no ap.pass
 
