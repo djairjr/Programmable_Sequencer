@@ -1,5 +1,7 @@
 # Programmable Sequencer
 
+[![Firmware CI](https://github.com/djairjr/Programmable_Sequencer/actions/workflows/firmware-ci.yml/badge.svg)](https://github.com/djairjr/Programmable_Sequencer/actions/workflows/firmware-ci.yml)
+
 Programmable relay sequencer for escape rooms on the Waveshare ESP32-S3-ETH-8DI-8RO-C. It switches up to eight
 relay channels (CH1-CH8) in an order the Gamemaster programs from a web page or from Home Assistant, and that
 order is the clue the player watches. Not a game: there is no player input and no win condition.
@@ -64,7 +66,7 @@ Serial console (115200): `start`, `stop`, `status`.
 
 ## Status
 
-- Compiles from a clean clone (the CI workflow is not published yet). **The task separation and the AP changes of 1.1.x have not yet run on a
+- Compiles from a clean clone (CI builds every push). **The task separation and the AP changes of 1.1.x have not yet run on a
   board**; the bench checks are listed in [docs/BOARD.md](docs/BOARD.md#10-to-measure-on-the-bench).
 - Open: over-the-air update; relay behaviour during an ESP32 reset (not documented by Waveshare).
 - The default passwords (`sequencer1234!`) are defined in `Config.h`. The page password is changed from the page; the AP password through `ap.pass` in `network.json` (or `POST /api/network`).

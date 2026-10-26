@@ -1,0 +1,54 @@
+name: Firmware CI
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: VERSION matches FW_VERSION
+        run: |
+          fw=$(sed -n 's/.*FW_VERSION *= *"\(.*\)";/\1/p' firmware/ProgrammableSequencer/Config.h)
+          file=$(tr -d '[:space:]' < VERSION)
+          echo "VERSION=$file FW_VERSION=$fw"
+          test "$fw" = "$file"
+
+      - name: Install arduino-cli
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$HOME/.local/bin" sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install the ESP32 core
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls \
+            https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.3.12
+
+      - name: Install the libraries (versions pinned in DEPENDENCIES.md)
+        run: |
+          arduino-cli lib update-index
+          arduino-cli lib install "ArduinoJson@7.4.3" "home-assistant-integration@2.1.0" "PubSubClient@2.8"
+
+      - name: Compile
+        run: |
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32s3:FlashSize=16M,PSRAM=opi,CDCOnBoot=cdc,PartitionScheme=custom" \
+            --build-path build firmware/ProgrammableSequencer
+
+      - name: Upload the binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ github.sha }}
+          path: |
+            build/ProgrammableSequencer.ino.bin
+            build/ProgrammableSequencer.ino.merged.bin
