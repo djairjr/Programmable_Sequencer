@@ -12,6 +12,9 @@ Compiled firmware is in [`releases/`](releases/) (one folder per version) and is
 [GitHub Release](https://github.com/djairjr/Programmable_Sequencer/releases/latest). Latest: [`releases/1.3.1`](releases/1.3.1).
 How to write it to a unit: [docs/UPDATING.md](docs/UPDATING.md).
 
+> **Versions 1.2.0 and 1.3.0 cannot log in**: the correct password returns to the sign-in page. Fixed in 1.3.1; see
+> the [issue](https://github.com/djairjr/Programmable_Sequencer/issues/1) and the [CHANGELOG](CHANGELOG.md). Use 1.3.1 or later.
+
 ## The one rule
 
 **The sequence is sovereign.** The state machine and the relays run in their own FreeRTOS task (core 1,
