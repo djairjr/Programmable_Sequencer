@@ -13,4 +13,5 @@ How to write them to a unit: [../docs/UPDATING.md](../docs/UPDATING.md).
 
 | version | notes |
 | --- | --- |
-| [1.3.0](1.3.0/) | English interface and identifiers. Not yet run on a board. |
+| [1.3.1](1.3.1/) | Fixes the login loop. Latest. Not yet run on a board. |
+| [1.3.0](1.3.0/) | **Do not use: the page cannot be logged into** (fixed in 1.3.1). |
