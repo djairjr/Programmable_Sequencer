@@ -76,5 +76,6 @@ Serial console (115200): `start`, `stop`, `status`.
 - Compiles from a clean clone (CI builds every push). **The task separation and the AP changes of 1.x have not yet run on a
   board**; the bench checks are listed in [docs/BOARD.md](docs/BOARD.md#10-to-measure-on-the-bench).
 - Open: over-the-air update; relay behaviour during an ESP32 reset (not documented by Waveshare).
-- The default passwords (`sequencer1234!`) are defined in `Config.h`. The page password is changed from the page; the AP password through `ap.pass` in `network.json` (or `POST /api/network`).
+- The default passwords (`sequencer1234!`) are defined in `Config.h` and are public: change the page password and set
+  `ap.pass` on every deployed unit. The page password is changed from the page; the AP password through `ap.pass` in `network.json` (or `POST /api/network`).
 - No license file yet.
