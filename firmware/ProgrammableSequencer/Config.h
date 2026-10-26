@@ -11,23 +11,23 @@
 #include <esp_random.h>
 #include "Pins.h"
 
-static const char* FW_VERSION         = "1.2.0";
+static const char* FW_VERSION         = "1.3.0";
 static const char* DEFAULT_ADMIN_PASS = "sequencer1234!";
 static const char* DEFAULT_AP_PASS     = "sequencer1234!";   // used when network.json has no ap.pass
 
 // ───────────────────────── Sequence ─────────────────────────
 
-enum class LightMode : uint8_t { PULSO, TROCA };
+enum class LightMode : uint8_t { PULSE, SWAP };
 enum class RepeatMode : uint8_t { ONCE, N_TIMES, LOOP };
 
-static const char* lightModeName(LightMode m) { return m == LightMode::PULSO ? "PULSO" : "TROCA"; }
+static const char* lightModeName(LightMode m) { return m == LightMode::PULSE ? "PULSE" : "SWAP"; }
 static const char* repeatModeName(RepeatMode r) {
   switch (r) { case RepeatMode::ONCE: return "ONCE"; case RepeatMode::N_TIMES: return "N_TIMES"; default: return "LOOP"; }
 }
 static bool parseLightMode(const char* s, LightMode& out) {
   if (!s) return false;
-  if (!strcmp(s, "PULSO")) { out = LightMode::PULSO; return true; }
-  if (!strcmp(s, "TROCA")) { out = LightMode::TROCA; return true; }
+  if (!strcmp(s, "PULSE") || !strcmp(s, "PULSO")) { out = LightMode::PULSE; return true; }   // PULSO: written by 1.0.x
+  if (!strcmp(s, "SWAP") || !strcmp(s, "TROCA")) { out = LightMode::SWAP; return true; }     // TROCA: written by 1.0.x
   return false;
 }
 static bool parseRepeatMode(const char* s, RepeatMode& out) {
@@ -40,7 +40,7 @@ static bool parseRepeatMode(const char* s, RepeatMode& out) {
 
 struct SeqConfig {
   std::vector<uint8_t> sequence{4, 4, 6, 7, 8, 1, 2, 5, 5, 6};
-  LightMode  mode = LightMode::PULSO;
+  LightMode  mode = LightMode::PULSE;
   uint32_t   on_ms = 2000;
   uint32_t   gap_ms = 500;
   uint32_t   cycle_pause_ms = 5000;
@@ -48,24 +48,24 @@ struct SeqConfig {
   RepeatMode repeat = RepeatMode::LOOP;
   uint32_t   repeat_count = 3;
   bool       autostart = true;
-  String     channel_names[NUM_CHANNELS] = {"Canal 1", "Canal 2", "Canal 3", "Canal 4",
-                                            "Canal 5", "Canal 6", "Canal 7", "Canal 8"};
+  String     channel_names[NUM_CHANNELS] = {"Channel 1", "Channel 2", "Channel 3", "Channel 4",
+                                            "Channel 5", "Channel 6", "Channel 7", "Channel 8"};
 };
 
-// Returns nullptr if valid, or the reason it was refused (shown on the page, in Portuguese).
+// Returns nullptr if valid, or the reason it was refused (shown on the page).
 static const char* validateSeqConfig(const SeqConfig& c) {
-  if (c.sequence.empty()) return "A sequencia esta vazia.";
+  if (c.sequence.empty()) return "The sequence is empty.";
   for (uint8_t ch : c.sequence)
-    if (ch < 1 || ch > NUM_CHANNELS) return "Cada passo deve ser um canal de 1 a 8.";
-  if (c.on_ms == 0) return "O tempo aceso deve ser maior que zero.";
-  if (c.blink_off_ms == 0) return "A apagada de repeticao deve ser maior que zero.";
-  if (c.mode == LightMode::PULSO) {
-    if (c.gap_ms == 0) return "No modo PULSO o tempo entre acionamentos deve ser maior que zero.";
-    if (c.cycle_pause_ms <= c.gap_ms) return "O tempo entre ciclos deve ser maior que o tempo entre acionamentos.";
+    if (ch < 1 || ch > NUM_CHANNELS) return "Each step must be a channel from 1 to 8.";
+  if (c.on_ms == 0) return "The on time must be greater than zero.";
+  if (c.blink_off_ms == 0) return "The off time on a repeat must be greater than zero.";
+  if (c.mode == LightMode::PULSE) {
+    if (c.gap_ms == 0) return "In PULSE mode the time between steps must be greater than zero.";
+    if (c.cycle_pause_ms <= c.gap_ms) return "The time between cycles must be greater than the time between steps.";
   } else {
-    if (c.cycle_pause_ms <= c.blink_off_ms) return "O tempo entre ciclos deve ser maior que a apagada de repeticao.";
+    if (c.cycle_pause_ms <= c.blink_off_ms) return "The time between cycles must be greater than the off time on a repeat.";
   }
-  if (c.repeat == RepeatMode::N_TIMES && c.repeat_count < 1) return "O numero de ciclos deve ser pelo menos 1.";
+  if (c.repeat == RepeatMode::N_TIMES && c.repeat_count < 1) return "The number of cycles must be at least 1.";
   return nullptr;
 }
 
@@ -114,16 +114,16 @@ static const char* seqFromJson(JsonVariantConst d, SeqConfig& c) {
   if (d["sequence"].is<JsonArrayConst>()) {
     c.sequence.clear();
     for (JsonVariantConst v : d["sequence"].as<JsonArrayConst>()) {
-      if (!v.is<int>()) return "Sequencia com valor nao numerico.";
+      if (!v.is<int>()) return "The sequence has a non-numeric value.";
       int ch = v.as<int>();
-      if (ch < 1 || ch > NUM_CHANNELS) return "Cada passo deve ser um canal de 1 a 8.";
+      if (ch < 1 || ch > NUM_CHANNELS) return "Each step must be a channel from 1 to 8.";
       c.sequence.push_back((uint8_t)ch);
     }
   } else if (d["sequence"].is<const char*>()) {
-    if (!textToSequence(d["sequence"].as<const char*>(), c.sequence)) return "Sequencia invalida: use canais de 1 a 8 separados por virgula.";
+    if (!textToSequence(d["sequence"].as<const char*>(), c.sequence)) return "Invalid sequence: use channels 1 to 8 separated by commas.";
   }
-  if (d["mode"].is<const char*>() && !parseLightMode(d["mode"], c.mode)) return "Modo invalido.";
-  if (d["repeat"].is<const char*>() && !parseRepeatMode(d["repeat"], c.repeat)) return "Repeticao invalida.";
+  if (d["mode"].is<const char*>() && !parseLightMode(d["mode"], c.mode)) return "Invalid mode.";
+  if (d["repeat"].is<const char*>() && !parseRepeatMode(d["repeat"], c.repeat)) return "Invalid repeat.";
   auto u32 = [&](const char* k, uint32_t& dst) -> bool {
     if (d[k].isNull()) return true;
     if (!d[k].is<long long>() && !d[k].is<double>()) return false;
@@ -134,7 +134,7 @@ static const char* seqFromJson(JsonVariantConst d, SeqConfig& c) {
   };
   if (!u32("on_ms", c.on_ms) || !u32("gap_ms", c.gap_ms) || !u32("cycle_pause_ms", c.cycle_pause_ms) ||
       !u32("blink_off_ms", c.blink_off_ms) || !u32("repeat_count", c.repeat_count))
-    return "Tempo ou contagem invalidos.";
+    return "Invalid time or count.";
   if (d["autostart"].is<bool>()) c.autostart = d["autostart"].as<bool>();
   if (d["channel_names"].is<JsonArrayConst>()) {
     uint8_t i = 0;
@@ -214,15 +214,15 @@ static void netFromJson(JsonVariantConst d, NetConfig& n, bool allowHash) {
 
 static const char* validateNetConfig(const NetConfig& n) {
   for (char c : n.hostname)
-    if (!isalnum((unsigned char)c) && c != '-') return "O hostname aceita so letras, numeros e hifen.";
+    if (!isalnum((unsigned char)c) && c != '-') return "The hostname accepts only letters, digits and hyphens.";
   // WPA2 passphrase: 8-63 characters (empty keeps the default). Message is shown on the page, in Portuguese.
-  if (n.ap_pass.length() && (n.ap_pass.length() < 8 || n.ap_pass.length() > 63)) return "A senha do AP deve ter de 8 a 63 caracteres.";
+  if (n.ap_pass.length() && (n.ap_pass.length() < 8 || n.ap_pass.length() > 63)) return "The AP password must be 8 to 63 characters.";
   IPAddress tmp;
   for (const IfaceConfig* i : {&n.eth, &n.wifi}) {
     if (!i->enabled || i->dhcp) continue;
     if (!tmp.fromString(i->ip) || !tmp.fromString(i->gateway) || !tmp.fromString(i->netmask))
-      return "IP fixo exige IP, gateway e mascara validos.";
-    if (i->dns.length() && !tmp.fromString(i->dns)) return "DNS invalido.";
+      return "A static IP needs a valid IP, gateway and netmask.";
+    if (i->dns.length() && !tmp.fromString(i->dns)) return "Invalid DNS.";
   }
   return nullptr;
 }

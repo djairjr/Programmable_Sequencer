@@ -94,7 +94,7 @@ void setup() {
 // Logs FSM transitions (the sequencer task never writes to the serial port).
 void logFsm() {
   static uint32_t lastRev = 0;
-  static SeqState lastState = SeqState::PARADO;
+  static SeqState lastState = SeqState::STOPPED;
   SeqRunner::Snap s = fsm.snap();
   if (s.rev == lastRev) return;
   lastRev = s.rev;

@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-10-26
+
+### Changed
+
+- **The whole interface is in English**: web page, API error messages, validation messages and the Home Assistant
+  entities. Default channel names are `Channel 1` ... `Channel 8`. Names already saved in `/config.json` are kept.
+- State, mode and command identifiers are English: states `STOPPED`, `STEP`, `REPEAT_OFF`, `GAP`, `CYCLE_PAUSE`
+  and modes `PULSE`, `SWAP` (they appear in `/api/state`, `/api/config`, `/config.json` and the Home Assistant
+  state sensor and mode select). A saved `/config.json` written with the old mode names `PULSO`/`TROCA` is still
+  read correctly. Home Assistant automations that matched the old state strings need updating.
+
 ## [1.2.0] - 2026-10-26
 
 ### Changed
@@ -51,5 +62,6 @@ All notable changes to this project are documented here. The format follows
   Ethernet + WiFi + configuration AP with captive portal, Home Assistant over MQTT Discovery, BOOT-button
   password recovery. FSM, web server, AP and MQTT shared one `loop()`.
 
+[1.3.0]: https://github.com/djairjr/Programmable_Sequencer/releases/tag/v1.3.0
 [1.2.0]: https://github.com/djairjr/Programmable_Sequencer/releases/tag/v1.2.0
 [1.1.0]: https://github.com/djairjr/Programmable_Sequencer/releases/tag/v1.1.0

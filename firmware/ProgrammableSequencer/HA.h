@@ -28,7 +28,7 @@ uint32_t connects = 0;
 String   lastEthIp = "-", lastWifiIp = "-";
 String   seqCmdTopic, seqStateTopic;
 
-const char* modeOptions   = "PULSO;TROCA";
+const char* modeOptions   = "PULSE;SWAP";
 const char* repeatOptions = "ONCE;N_TIMES;LOOP";
 
 void publishFsm() {
@@ -36,7 +36,7 @@ void publishFsm() {
   SeqRunner::Snap s = ctx->seq.snap();
   sState.setValue(seqStateName(s.state));
   char buf[24];
-  if (s.state == SeqState::PARADO) { sStep.setValue("-"); sCycle.setValue("-"); return; }
+  if (s.state == SeqState::STOPPED) { sStep.setValue("-"); sCycle.setValue("-"); return; }
   snprintf(buf, sizeof(buf), "%u/%u", (unsigned)s.idx + 1, (unsigned)c.sequence.size());
   sStep.setValue(buf);
   if (c.repeat == RepeatMode::LOOP) snprintf(buf, sizeof(buf), "%lu/\xE2\x88\x9E", (unsigned long)s.cycle);
@@ -71,7 +71,7 @@ void applyCandidate(const SeqConfig& c) {
     return;
   }
   ctx->store.seq = c;
-  ctx->seq.setConfig(c);    // new config: the sequencer adopts it and goes to PARADO (stopped), before the flash write
+  ctx->seq.setConfig(c);    // new config: the sequencer adopts it and goes to STOPPED, before the flash write
   ctx->store.saveSeq();
   publishConfig(true);
 }
@@ -123,7 +123,7 @@ void onMessage(const char* topic, const uint8_t* payload, uint16_t len) {
 void onConnected() {
   const char* id = device.getUniqueId();
   JsonDocument d;
-  d["name"] = "Sequência";
+  d["name"] = "Sequence";
   d["uniq_id"] = String(id) + "_sequence";
   d["cmd_t"] = seqCmdTopic;
   d["stat_t"] = seqStateTopic;
@@ -164,27 +164,27 @@ void begin(AppCtx& app) {
   seqCmdTopic   = String("aha/") + device.getUniqueId() + "/sequence/cmd_t";
   seqStateTopic = String("aha/") + device.getUniqueId() + "/sequence/stat_t";
 
-  bStart.setName("Iniciar"); bStart.setIcon("mdi:play"); bStart.onCommand(onStart);
-  bStop.setName("Parar");    bStop.setIcon("mdi:stop");  bStop.onCommand(onStop);
+  bStart.setName("Start"); bStart.setIcon("mdi:play"); bStart.onCommand(onStart);
+  bStop.setName("Stop");    bStop.setIcon("mdi:stop");  bStop.onCommand(onStop);
 
-  sState.setName("Estado");      sState.setIcon("mdi:state-machine");
-  sStep.setName("Passo");        sStep.setIcon("mdi:debug-step-over");
-  sCycle.setName("Ciclo");       sCycle.setIcon("mdi:repeat");
+  sState.setName("State");      sState.setIcon("mdi:state-machine");
+  sStep.setName("Step");        sStep.setIcon("mdi:debug-step-over");
+  sCycle.setName("Cycle");       sCycle.setIcon("mdi:repeat");
   sIpEth.setName("IP Ethernet"); sIpEth.setIcon("mdi:ethernet");
   sIpWifi.setName("IP WiFi");    sIpWifi.setIcon("mdi:wifi");
 
-  selMode.setName("Modo de acendimento"); selMode.setOptions(modeOptions);   selMode.setIcon("mdi:lightbulb-on");
-  selRepeat.setName("Repetição");         selRepeat.setOptions(repeatOptions); selRepeat.setIcon("mdi:repeat-variant");
+  selMode.setName("Light mode"); selMode.setOptions(modeOptions);   selMode.setIcon("mdi:lightbulb-on");
+  selRepeat.setName("Repeat");         selRepeat.setOptions(repeatOptions); selRepeat.setIcon("mdi:repeat-variant");
   selMode.onCommand(onSelect); selRepeat.onCommand(onSelect);
 
   for (HANumber* num : {&nOn, &nGap, &nCycle}) {
     num->setMin(0); num->setMax(3600); num->setStep(0.1f);
     num->setUnitOfMeasurement("s"); num->setMode(HANumber::ModeBox); num->onCommand(onNumber);
   }
-  nOn.setName("Tempo aceso");             nOn.setIcon("mdi:timer-sand");
-  nGap.setName("Tempo entre acionamentos"); nGap.setIcon("mdi:timer-pause");
-  nCycle.setName("Tempo entre ciclos");   nCycle.setIcon("mdi:timer-refresh");
-  nCount.setName("Ciclos (N)"); nCount.setMin(1); nCount.setMax(100000); nCount.setStep(1);
+  nOn.setName("On time");             nOn.setIcon("mdi:timer-sand");
+  nGap.setName("Time between steps"); nGap.setIcon("mdi:timer-pause");
+  nCycle.setName("Time between cycles");   nCycle.setIcon("mdi:timer-refresh");
+  nCount.setName("Cycles (N)"); nCount.setMin(1); nCount.setMax(100000); nCount.setStep(1);
   nCount.setMode(HANumber::ModeBox); nCount.setIcon("mdi:counter"); nCount.onCommand(onNumber);
 
   swAuto.setName("Autostart"); swAuto.setIcon("mdi:power"); swAuto.onCommand(onSwitch);

@@ -4,11 +4,6 @@ Programmable relay sequencer: switches the relay channels (CH1-CH8) in the order
 programmed. The order is the clue the player observes. The functional summary is in the
 [README](../README.md); this document describes how the firmware implements it, starting with the FSM.
 
-> **Naming.** State and mode names are runtime identifiers of the API, the web page and the Home Assistant
-> states, so they keep their Portuguese names: `PARADO` = stopped, `PASSO` = step, `APAGADA_REPETICAO` = repeat-off,
-> `INTERVALO` = gap, `PAUSA_CICLO` = cycle pause, `INICIAR`/`PARAR` = START/STOP, `PULSO` = pulse mode,
-> `TROCA` = swap mode. Page texts and Home Assistant entity labels are Portuguese UI strings for the Brazilian
-> operator.
 
 ---
 
@@ -24,54 +19,54 @@ they change.
 
 | state | relays (effect) | entered when |
 | --- | --- | --- |
-| `PARADO` | all off (or the manual test mask) | boot, PARAR, end of cycles, config saved |
-| `PASSO` | only the channel `sequence[idx]` | INICIAR, or step advance |
-| `APAGADA_REPETICAO` | all off | TROCA, and the next step repeats the current channel |
-| `INTERVALO` | all off | PULSO, between one step and the next |
-| `PAUSA_CICLO` | all off | end of sequence, with cycles left |
+| `STOPPED` | all off (or the manual test mask) | boot, STOP, end of cycles, config saved |
+| `STEP` | only the channel `sequence[idx]` | START, or step advance |
+| `REPEAT_OFF` | all off | SWAP, and the next step repeats the current channel |
+| `GAP` | all off | PULSE, between one step and the next |
+| `CYCLE_PAUSE` | all off | end of sequence, with cycles left |
 
 ### 1.2 Transitions
 
 ```
-                 INICIAR (godmode)
+                 START (godmode)
    ┌───────────┐ ─────────────────► ┌───────┐
-   │  PARADO   │                    │ PASSO │◄─────────────────────────┐
-   └───────────┘ ◄── PARAR (godmode, from any state)                   │
+   │  STOPPED  │                    │ STEP  │◄─────────────────────────┐
+   └───────────┘ ◄── STOP (godmode, from any state)                   │
         ▲                              │ on_ms                         │
         │                              ▼                               │
         │          ┌──────── next step? ───────────────┐               │
         │          │ yes                               │ no            │
         │          ▼                                   ▼               │
-        │   PULSO → INTERVALO ──gap_ms──► idx++ ──► PASSO              │
-        │   TROCA, same channel → APAGADA_REPETICAO ──blink_off_ms──► idx++ ──► PASSO
-        │   TROCA, different channel → idx++ ──► PASSO (immediate switch)  │
+        │   PULSE → GAP ──gap_ms──► idx++ ──► STEP              │
+        │   SWAP, same channel → REPEAT_OFF ──blink_off_ms──► idx++ ──► STEP
+        │   SWAP, different channel → idx++ ──► STEP (immediate switch)  │
         │                                                              │
-        │                       cycles left? ── yes ──► PAUSA_CICLO
+        │                       cycles left? ── yes ──► CYCLE_PAUSE
         │                              │ no                    │ cycle_pause_ms
         └──────────────────────────────┘                        └─► cycle++, idx=0 ─┘
 ```
 
 | from | event | to | action |
 | --- | --- | --- | --- |
-| any | PARAR | `PARADO` | relays off immediately; manual test cleared |
-| any | INICIAR | `PASSO` | `idx=0`, `cycle=1`, manual test cleared (empty sequence: stays in `PARADO`) |
-| any | config saved | `PARADO` | new config applied; the sequence is not swapped in the middle of a cycle |
-| `PASSO` | `on_ms` and next step exists, PULSO | `INTERVALO` | |
-| `PASSO` | `on_ms` and next step exists, TROCA, same channel | `APAGADA_REPETICAO` | |
-| `PASSO` | `on_ms` and next step exists, TROCA, different channel | `PASSO` | `idx++` |
-| `PASSO` | `on_ms`, last step, cycles left | `PAUSA_CICLO` | |
-| `PASSO` | `on_ms`, last step, no cycles left | `PARADO` | |
-| `INTERVALO` | `gap_ms` | `PASSO` | `idx++` |
-| `APAGADA_REPETICAO` | `blink_off_ms` | `PASSO` | `idx++` |
-| `PAUSA_CICLO` | `cycle_pause_ms` | `PASSO` | `cycle++`, `idx=0` |
-| `PARADO` | manual test | `PARADO` | the manual mask becomes the output (accepted only in `PARADO`) |
+| any | STOP | `STOPPED` | relays off immediately; manual test cleared |
+| any | START | `STEP` | `idx=0`, `cycle=1`, manual test cleared (empty sequence: stays in `STOPPED`) |
+| any | config saved | `STOPPED` | new config applied; the sequence is not swapped in the middle of a cycle |
+| `STEP` | `on_ms` and next step exists, PULSE | `GAP` | |
+| `STEP` | `on_ms` and next step exists, SWAP, same channel | `REPEAT_OFF` | |
+| `STEP` | `on_ms` and next step exists, SWAP, different channel | `STEP` | `idx++` |
+| `STEP` | `on_ms`, last step, cycles left | `CYCLE_PAUSE` | |
+| `STEP` | `on_ms`, last step, no cycles left | `STOPPED` | |
+| `GAP` | `gap_ms` | `STEP` | `idx++` |
+| `REPEAT_OFF` | `blink_off_ms` | `STEP` | `idx++` |
+| `CYCLE_PAUSE` | `cycle_pause_ms` | `STEP` | `cycle++`, `idx=0` |
+| `STOPPED` | manual test | `STOPPED` | the manual mask becomes the output (accepted only in `STOPPED`) |
 
 "Cycles left" means: `repeat=LOOP`, or `repeat=N_TIMES` and `cycle < repeat_count`. In `ONCE`,
 there never are.
 
 ### 1.3 Boot
 
-`PARADO` with all relays off. The TCA9554 receives the output register first (`0x00`) and only
+`STOPPED` with all relays off. The TCA9554 receives the output register first (`0x00`) and only
 afterwards the pin configuration as outputs, so no relay pulses at boot. With `autostart=true`
 (default), `SeqRunner::begin()` requests the start before any network code runs.
 
@@ -90,8 +85,8 @@ Validated in `validateSeqConfig()`, the same function for the page, HA and JSON:
 
 - sequence not empty, each step between 1 and 8, free length (`std::vector`);
 - `on_ms > 0`, `blink_off_ms > 0`;
-- PULSO: `gap_ms > 0` and `cycle_pause_ms > gap_ms`;
-- TROCA: `cycle_pause_ms > blink_off_ms`;
+- PULSE: `gap_ms > 0` and `cycle_pause_ms > gap_ms`;
+- SWAP: `cycle_pause_ms > blink_off_ms`;
 - N_TIMES: `repeat_count >= 1`.
 
 Rejected configuration:
@@ -99,6 +94,8 @@ Rejected configuration:
 - **Page:** HTTP 400 with the reason, which is shown on screen.
 - **HA:** the entity republishes the previous value.
 - **JSON at boot:** the firmware uses the defaults and logs the reason to the serial log.
+
+`mode` is `PULSE` or `SWAP`; the 1.0.x names `PULSO`/`TROCA` are still accepted when reading a saved file.
 
 Defaults live in the code; the JSON is only an override (`/config.json` and `/network.json` on LittleFS).
 
@@ -126,7 +123,7 @@ Defaults live in the code; the JSON is only an override (`/config.json` and `/ne
 | interface | reads from FSM | writes to FSM |
 | --- | --- | --- |
 | Web page (`WebUI.h`) | `/api/state` (state, step, cycle, mask), `/api/wifi/scan` (asynchronous scan, does not touch the FSM) | `/api/start`, `/api/stop`, `/api/manual`, `/api/config` |
-| Home Assistant (`HA.h`) | sensors Estado, Passo, Ciclo, IPs | buttons, selects, numbers, switch, sequence text |
+| Home Assistant (`HA.h`) | sensors State, Step, Cycle, IPs | buttons, selects, numbers, switch, sequence text |
 | Serial (USB) | `status` | `start`, `stop` |
 | BOOT button | — | Holding it for 10 s restores the default page password (does not touch the FSM) |
 
@@ -186,24 +183,21 @@ Device with an id derived from the MAC, shared availability and last will.
 
 | entity | type | id |
 | --- | --- | --- |
-| Iniciar / Parar | button | `start`, `stop` |
-| Estado | sensor | `state` |
-| Passo / Ciclo | sensor | `step` (`3/10`), `cycle` (`2/5` or `2/∞`) |
-| Modo | select | `mode` (PULSO;TROCA) |
-| Repetição | select | `repeat` (ONCE;N_TIMES;LOOP) |
-| Aceso / Entre acionamentos / Entre ciclos | number (s, 0,1) | `on_s`, `gap_s`, `cycle_s` |
-| Ciclos (N) | number | `repeat_count` |
+| Start / Stop | button | `start`, `stop` |
+| State | sensor | `state` |
+| Step / Cycle | sensor | `step` (`3/10`), `cycle` (`2/5` or `2/∞`) |
+| Light mode | select | `mode` (PULSE;SWAP) |
+| Repeat | select | `repeat` (ONCE;N_TIMES;LOOP) |
+| On time / Time between steps / Time between cycles | number (s, 0.1) | `on_s`, `gap_s`, `cycle_s` |
+| Cycles (N) | number | `repeat_count` |
 | Autostart | switch | `autostart` |
 | IP Ethernet / IP WiFi | sensor | `ip_eth`, `ip_wifi` |
-| Sequência | text (own discovery) | `sequence` |
+| Sequence | text (own discovery) | `sequence` |
 
 ArduinoHA 2.1.0 has no `text` entity, so the sequence is published with its own discovery
 (`homeassistant/text/<id>_sequence/config`) and subscribed through `HAMqtt::onMessage`. Home
 Assistant itself limits `text` entities to 255 characters (about 127 steps). Longer sequences are
 only possible through the page; this is a HA limit, not a firmware one.
-
-The entity labels in the table (Iniciar, Parar, Estado, Passo, Ciclo, Modo, Repetição, Aceso, Entre acionamentos,
-Entre ciclos, Ciclos (N), Sequência) are Portuguese UI strings and are left as they are.
 
 ---
 

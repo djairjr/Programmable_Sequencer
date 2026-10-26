@@ -15,7 +15,7 @@
 class SeqRunner {
 public:
   struct Snap {
-    SeqState state = SeqState::PARADO;
+    SeqState state = SeqState::STOPPED;
     uint32_t idx = 0;
     uint32_t cycle = 0;
     uint32_t rev = 0;
@@ -37,7 +37,7 @@ public:
   // ── Requests (any task; they never block the FSM) ──
   void requestStart() { reqStart_ = true; }
   void requestStop()  { reqStop_ = true; }
-  // New config: the FSM adopts it and goes to PARADO (stopped). Holds the mutex only for one copy.
+  // New config: the FSM adopts it and goes to STOPPED. Holds the mutex only for one copy.
   void setConfig(const SeqConfig& c) {
     xSemaphoreTake(pendingMtx_, portMAX_DELAY);
     pendingCfg_ = c;
@@ -46,7 +46,7 @@ public:
   }
   // Manual test: only accepted with the FSM stopped. The FSM revalidates when applying.
   bool requestManual(uint8_t mask) {
-    if (snap().state != SeqState::PARADO || reqStart_) return false;
+    if (snap().state != SeqState::STOPPED || reqStart_) return false;
     manualReq_ = mask;
     return true;
   }

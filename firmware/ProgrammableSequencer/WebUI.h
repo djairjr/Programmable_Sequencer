@@ -75,7 +75,7 @@ private:
   }
   bool auth() {
     if (hasSession()) return true;
-    server_.send(401, "application/json", "{\"error\":\"Sessao expirada. Entre de novo.\"}");
+    server_.send(401, "application/json", "{\"error\":\"Session expired. Sign in again.\"}");
     return false;
   }
   String newSession() {
@@ -99,7 +99,7 @@ private:
     server_.send(200, "application/json", out);
   }
   bool parseBody(JsonDocument& d) {
-    if (deserializeJson(d, server_.arg("plain"))) { sendErr(400, "JSON invalido."); return false; }
+    if (deserializeJson(d, server_.arg("plain"))) { sendErr(400, "Invalid JSON."); return false; }
     return true;
   }
 
@@ -117,7 +117,7 @@ private:
       server_.send(303);
       Serial.println("[WEB] login ok");
     } else {
-      server_.sendHeader("Location", "/?erro=1");
+      server_.sendHeader("Location", "/?error=1");
       server_.send(303);
       Serial.println("[WEB] login refused");
     }
@@ -156,7 +156,7 @@ private:
       server_.send(302);
       return;
     }
-    server_.send(404, "text/plain", "Nao encontrado");
+    server_.send(404, "text/plain", "Not found");
   }
 
   // ── API ──
@@ -165,7 +165,7 @@ private:
     SeqRunner::Snap s = ctx_.seq.snap();
     JsonDocument d;
     d["state"] = seqStateName(s.state);
-    bool running = s.state != SeqState::PARADO;
+    bool running = s.state != SeqState::STOPPED;
     d["step"] = running ? (int)s.idx + 1 : 0;
     d["total"] = (int)c.sequence.size();
     d["channel"] = running && s.idx < c.sequence.size() ? c.sequence[s.idx] : 0;
@@ -205,8 +205,8 @@ private:
     if (!err) err = validateSeqConfig(c);
     if (err) { sendErr(400, err); return; }
     ctx_.store.seq = c;
-    ctx_.seq.setConfig(c);    // new config: the sequencer adopts it and goes to PARADO (stopped), before the flash write
-    if (!ctx_.store.saveSeq()) { sendErr(500, "Falha ao gravar a configuracao."); return; }
+    ctx_.seq.setConfig(c);    // new config: the sequencer adopts it and goes to STOPPED, before the flash write
+    if (!ctx_.store.saveSeq()) { sendErr(500, "Failed to save the settings."); return; }
     if (ctx_.onSeqConfigChanged) ctx_.onSeqConfigChanged();
     Serial.printf("[WEB] config saved: %s\n", sequenceToText(c.sequence).c_str());
     sendOk();
@@ -216,7 +216,7 @@ private:
     JsonDocument d;
     if (!parseBody(d)) return;
     uint8_t mask = d["mask"] | 0;
-    if (!ctx_.seq.requestManual(mask)) { sendErr(409, "Teste manual so com a sequencia parada."); return; }
+    if (!ctx_.seq.requestManual(mask)) { sendErr(409, "The manual test only works while the sequence is stopped."); return; }
     sendOk();
   }
 
@@ -234,7 +234,7 @@ private:
     const char* err = validateNetConfig(n);
     if (err) { sendErr(400, err); return; }
     ctx_.store.net = n;
-    if (!ctx_.store.saveNet()) { sendErr(500, "Falha ao gravar a rede."); return; }
+    if (!ctx_.store.saveNet()) { sendErr(500, "Failed to save the network settings."); return; }
     sendOk();
     restartAt_ = millis();
   }
@@ -274,11 +274,11 @@ private:
     JsonDocument d;
     if (!parseBody(d)) return;
     String cur = d["current"] | "", nw = d["new"] | "", conf = d["confirm"] | "";
-    if (!checkPass(ctx_.store.net, cur)) { sendErr(403, "Senha atual incorreta."); return; }
-    if (nw.isEmpty()) { sendErr(400, "A nova senha nao pode ser vazia."); return; }
-    if (nw != conf) { sendErr(400, "A confirmacao nao confere com a nova senha."); return; }
+    if (!checkPass(ctx_.store.net, cur)) { sendErr(403, "The current password is wrong."); return; }
+    if (nw.isEmpty()) { sendErr(400, "The new password cannot be empty."); return; }
+    if (nw != conf) { sendErr(400, "The confirmation does not match the new password."); return; }
     ctx_.store.net.admin_pass_hash = makePassHash(nw);
-    if (!ctx_.store.saveNet()) { sendErr(500, "Falha ao gravar a senha."); return; }
+    if (!ctx_.store.saveNet()) { sendErr(500, "Failed to save the password."); return; }
     Serial.println("[WEB] page password changed");
     sendOk();
   }
