@@ -78,5 +78,5 @@ Serial console (115200): `start`, `stop`, `status`.
 - Open: over-the-air update; relay behaviour during an ESP32 reset (not documented by Waveshare).
 - The default passwords (`sequencer1234!`) are defined in `Config.h` and are public: change the page password and set
   `ap.pass` on every deployed unit. The page password is changed from the page; the AP password through `ap.pass` in `network.json` (or `POST /api/network`).
-- The source in this repository is under the [MIT License](LICENSE). The compiled firmware also contains third-party
-  libraries under their own licenses, notably ArduinoHA (AGPL-3.0): see [DEPENDENCIES.md](DEPENDENCIES.md#licenses).
+- Licensed under the [MIT License](LICENSE). The third-party libraries have their own licenses: see
+  [DEPENDENCIES.md](DEPENDENCIES.md#licenses).

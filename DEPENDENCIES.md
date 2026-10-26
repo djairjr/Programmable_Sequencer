@@ -19,8 +19,5 @@ Notes:
 
 ## Licenses
 
-The source files of this repository are under the [MIT License](LICENSE). The firmware images in `releases/` are
-built from that source **plus** the libraries above, so they are also subject to those licenses. In particular
-ArduinoHA is licensed under the GNU Affero General Public License v3.0 (license text shipped with the library) and
-the Arduino-ESP32 core under the LGPL; the complete corresponding source of the firmware is this repository.
-Licenses were read from the installed library and core files on 2026-10-26.
+This repository is under the [MIT License](LICENSE). The libraries above have their own licenses (listed in the
+table), for example ArduinoHA is AGPL-3.0.
