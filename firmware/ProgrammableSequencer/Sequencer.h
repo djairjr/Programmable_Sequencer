@@ -1,0 +1,121 @@
+#pragma once
+// Sovereign FSM of the sequencer (see docs/ARCHITECTURE.md §1).
+// Interfaces only call request*(); tick() decides. Relays = outputMask(), an effect of the state.
+
+#include "Config.h"
+
+enum class SeqState : uint8_t { PARADO, PASSO, APAGADA_REPETICAO, INTERVALO, PAUSA_CICLO };
+
+static const char* seqStateName(SeqState s) {
+  switch (s) {
+    case SeqState::PARADO:            return "PARADO";
+    case SeqState::PASSO:             return "PASSO";
+    case SeqState::APAGADA_REPETICAO: return "APAGADA_REPETICAO";
+    case SeqState::INTERVALO:         return "INTERVALO";
+    default:                          return "PAUSA_CICLO";
+  }
+}
+
+class Sequencer {
+public:
+  // ── Requests (written by the interfaces) ──
+  void requestStart() { reqStart_ = true; }
+  void requestStop()  { reqStop_ = true; }
+  // Manual test: only accepted in PARADO. Returns false if refused.
+  bool requestManual(uint8_t mask) {
+    if (state_ != SeqState::PARADO || reqStart_) return false;
+    manualMask_ = mask;
+    return true;
+  }
+
+  // ── One pass of the FSM ──
+  void tick(const SeqConfig& c, uint32_t now) {
+    // Godmode: STOP and START are valid in any state.
+    if (reqStop_) { reqStop_ = false; reqStart_ = false; enter(SeqState::PARADO, now); manualMask_ = 0; }
+    if (reqStart_) {
+      reqStart_ = false;
+      manualMask_ = 0;
+      if (c.sequence.empty()) { enter(SeqState::PARADO, now); }
+      else { idx_ = 0; cycle_ = 1; enter(SeqState::PASSO, now); }
+    }
+
+    uint32_t el = now - t0_;
+    uint32_t t;
+    switch (state_) {
+      case SeqState::PARADO:
+        break;
+
+      case SeqState::PASSO:
+        if (el < c.on_ms) break;
+        t = t0_ + c.on_ms;
+        if (idx_ + 1 < c.sequence.size()) {
+          if (c.mode == LightMode::PULSO) enter(SeqState::INTERVALO, t, now);
+          else if (c.sequence[idx_ + 1] == c.sequence[idx_]) enter(SeqState::APAGADA_REPETICAO, t, now);
+          else { idx_++; enter(SeqState::PASSO, t, now); }
+        } else if (hasMoreCycles(c)) {
+          enter(SeqState::PAUSA_CICLO, t, now);
+        } else {
+          enter(SeqState::PARADO, now);
+        }
+        break;
+
+      case SeqState::INTERVALO:
+        if (el >= c.gap_ms) { idx_++; enter(SeqState::PASSO, t0_ + c.gap_ms, now); }
+        break;
+
+      case SeqState::APAGADA_REPETICAO:
+        if (el >= c.blink_off_ms) { idx_++; enter(SeqState::PASSO, t0_ + c.blink_off_ms, now); }
+        break;
+
+      case SeqState::PAUSA_CICLO:
+        if (el >= c.cycle_pause_ms) { cycle_++; idx_ = 0; enter(SeqState::PASSO, t0_ + c.cycle_pause_ms, now); }
+        break;
+    }
+  }
+
+  // ── Effect of the state ──
+  uint8_t outputMask(const SeqConfig& c) const {
+    switch (state_) {
+      case SeqState::PARADO: return manualMask_;
+      case SeqState::PASSO:
+        if (idx_ < c.sequence.size()) return (uint8_t)(1u << (c.sequence[idx_] - 1));
+        return 0;
+      default: return 0;
+    }
+  }
+
+  SeqState state() const { return state_; }
+  size_t   stepIndex() const { return idx_; }
+  uint32_t cycle() const { return cycle_; }
+  uint8_t  manualMask() const { return manualMask_; }
+  // Increments on every transition: interfaces publish only when it changes.
+  uint32_t revision() const { return rev_; }
+
+private:
+  SeqState state_ = SeqState::PARADO;
+  size_t   idx_ = 0;
+  uint32_t cycle_ = 0;
+  uint32_t t0_ = 0;
+  uint32_t rev_ = 0;
+  uint8_t  manualMask_ = 0;
+  bool     reqStart_ = false;
+  bool     reqStop_ = false;
+
+  bool hasMoreCycles(const SeqConfig& c) const {
+    if (c.repeat == RepeatMode::LOOP) return true;
+    if (c.repeat == RepeatMode::N_TIMES) return cycle_ < c.repeat_count;
+    return false;
+  }
+
+  // `start` is the theoretical instant of the transition (end of the previous state): time does not accumulate
+  // drift. If the pass was late by more than 100 ms, resynchronize at `now`. No Serial here:
+  // whoever watches `revision()` logs the transition.
+  void enter(SeqState s, uint32_t start, uint32_t now) {
+    if (now - start > 100) start = now;
+    if (s == SeqState::PARADO) { idx_ = 0; cycle_ = 0; }
+    state_ = s;
+    t0_ = start;
+    rev_++;
+  }
+  void enter(SeqState s, uint32_t now) { enter(s, now, now); }
+};

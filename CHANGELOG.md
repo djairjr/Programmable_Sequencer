@@ -1,0 +1,44 @@
+# Changelog
+
+All notable changes to this project are documented here. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
+[Semantic Versioning](https://semver.org/).
+
+## [1.1.0] - 2026-10-26
+
+### Changed
+
+- **Defaults changed.** The AP SSID is now `Sequencer-XXXX` (was `Quadros-XXXX`) and the default page and AP
+  password is `sequencer1234!`. A unit that never set its own page password (empty hash in `/network.json`)
+  accepts the new default after an `app` update; a unit that set one keeps it.
+- The AP password is now configurable: `ap.pass` in `/network.json` (8-63 characters; empty = default).
+- The sequencer (FSM and relays) now runs in its own FreeRTOS task (core 1, priority 10, 1 ms period) and is
+  started before any network code. Web, AP, MQTT and Home Assistant can no longer delay a relay.
+- FSM transitions are anchored to the theoretical end of the previous state, so a late pass no longer
+  accumulates drift over the steps.
+- Saving a new sequence stops the FSM before the flash write, so the write stall happens with the relays off.
+- The configuration AP comes up after 10 s without a network (was 15 s), in pure AP mode. The saved WiFi is
+  retried every 60 s for up to 10 s, and never while a client is on the AP.
+- MQTT/Home Assistant only try to connect when a broker is configured **and** an interface has an IP.
+- Code comments, serial logs and documentation are in English. Page texts and Home Assistant labels stay in
+  Portuguese.
+
+### Fixed
+
+- WiFi modem sleep is disabled; the core enables it by default and it can make TCP handshakes on the AP/STA be
+  refused for seconds.
+
+### Added
+
+- `version` and `seq_max_late_us` in `/api/state`; max lateness in the serial `status` line.
+- `docs/ARCHITECTURE.md`, `docs/BOARD.md`, `docs/UPDATING.md`, CI build.
+
+## [1.0.0] - 2026-10-21
+
+### Added
+
+- First firmware: sovereign FSM (pulse and swap modes), JSON settings on LittleFS, web page with login,
+  Ethernet + WiFi + configuration AP with captive portal, Home Assistant over MQTT Discovery, BOOT-button
+  password recovery. FSM, web server, AP and MQTT shared one `loop()`.
+
+[1.1.0]: https://github.com/djairjr/Programmable_Sequencer/releases/tag/v1.1.0
