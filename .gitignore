@@ -3,6 +3,8 @@ build/
 *.elf
 *.map
 *.bin
+# ...except the published release binaries
+!releases/**/*.bin
 
 # Editors and OS
 .vscode/
@@ -10,5 +12,3 @@ build/
 *.swp
 .DS_Store
 
-# Local copies of the release binaries (published on GitHub Releases, not in git)
-releases/

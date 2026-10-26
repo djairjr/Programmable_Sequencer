@@ -6,6 +6,12 @@ Programmable relay sequencer for escape rooms on the Waveshare ESP32-S3-ETH-8DI-
 relay channels (CH1-CH8) in an order the Gamemaster programs from a web page or from Home Assistant, and that
 order is the clue the player watches. Not a game: there is no player input and no win condition.
 
+## Download
+
+Compiled firmware is in [`releases/`](releases/) (one folder per version) and is attached to each
+[GitHub Release](https://github.com/djairjr/Programmable_Sequencer/releases/latest). Latest: [`releases/1.3.0`](releases/1.3.0).
+How to write it to a unit: [docs/UPDATING.md](docs/UPDATING.md).
+
 ## The one rule
 
 **The sequence is sovereign.** The state machine and the relays run in their own FreeRTOS task (core 1,
@@ -59,6 +65,7 @@ Serial console (115200): `start`, `stop`, `status`.
 | path | content |
 | --- | --- |
 | `firmware/ProgrammableSequencer/` | the Arduino sketch and its headers |
+| `releases/` | compiled firmware per version (`full` and `app` images, `SHA256SUMS`) |
 | `docs/ARCHITECTURE.md` | FSM, tasks, network, web access, Home Assistant |
 | `docs/BOARD.md` | the board: pins, power, flash map, undocumented behaviour, bench to-do |
 | `docs/UPDATING.md` | how to update a unit over USB, and how to roll back |
@@ -66,7 +73,7 @@ Serial console (115200): `start`, `stop`, `status`.
 
 ## Status
 
-- Compiles from a clean clone (CI builds every push). **The task separation and the AP changes of 1.1.x have not yet run on a
+- Compiles from a clean clone (CI builds every push). **The task separation and the AP changes of 1.x have not yet run on a
   board**; the bench checks are listed in [docs/BOARD.md](docs/BOARD.md#10-to-measure-on-the-bench).
 - Open: over-the-air update; relay behaviour during an ESP32 reset (not documented by Waveshare).
 - The default passwords (`sequencer1234!`) are defined in `Config.h`. The page password is changed from the page; the AP password through `ap.pass` in `network.json` (or `POST /api/network`).
